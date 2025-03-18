@@ -9,8 +9,7 @@ public class GameManager : MonoBehaviour
     public static GameManager instance { get; private set; }
 
     // Editable on Editor
-    [SerializeField]
-    protected List<GameObject> FoundGoblins;
+    public List<GameObject> FoundGoblins { get; private set; }
     private TMP_Text WinLoseTextElement { get; set; }
 
     void Awake()
