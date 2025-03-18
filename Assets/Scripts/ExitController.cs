@@ -7,7 +7,7 @@ public class ExitController : MonoBehaviour
         if (!collision.gameObject.CompareTag("Player"))
             return;
 
-        if (GameManager.instance.FoundGoblins.Count >= 0) 
+        if (GameManager.instance.FoundGoblins.Count > 0) 
         {
             GameManager.instance.Win();
         }
