@@ -1,18 +1,51 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(SpriteRenderer))]
 public class PlayerController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField]
+    protected float Speed = 5;
+
+    // Private attributes
+    private SpriteRenderer SpriteRenderer;
+    private Rigidbody2D RigidBody;
+    private int FacingDirection;
+
+    
+    void Awake()
     {
-        
+        SpriteRenderer = GetComponent<SpriteRenderer>();
+        RigidBody = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
-    void Update()
+    void Start()
     {
-        
+
+    }
+
+    void FixedUpdate()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+
+        ChangeDirection(horizontal);
+
+        var velocity = new Vector2(horizontal, vertical).normalized * Speed;
+
+        RigidBody.velocity = velocity;
+    }
+
+    public void ChangeDirection(float horizontal) 
+    {
+        if (horizontal == 0)
+            return;
+
+        if (horizontal == FacingDirection)
+            return;
+
+        FacingDirection = (int)horizontal;
+
+        gameObject.transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y);
     }
 }

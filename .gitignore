@@ -1,4 +1,3 @@
-# Unity-specific ignore rules
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -7,8 +6,6 @@
 [Ll]ogs/
 UserSettings/
 
-# Ignore .meta files outside Assets (keep them inside)
-# Ignore Unity-generated local settings
 *.csproj
 *.sln
 *.userprefs
