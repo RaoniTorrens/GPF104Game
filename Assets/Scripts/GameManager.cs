@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public static GameManager instance { get; private set; }
 
     // Editable on Editor
+    public AudioManager audioManager;
     public List<GameObject> FoundGoblins { get; private set; }
     private TMP_Text WinLoseTextElement { get; set; }
 
@@ -38,15 +39,24 @@ public class GameManager : MonoBehaviour
         Debug.Log("WIN");
         WinLoseTextElement.text = "VICTORY";
         WinLoseTextElement.alpha = 100;
+        LoadMainScene(); // Load the main scene
         
         // Quit Scene
     }
 
-    public void Lose()
+     public void Lose()
     {
         WinLoseTextElement.text = "DEFEAT";
         WinLoseTextElement.alpha = 100;
-        
+        LoadMainScene(); // Load the main scene
         // Quit Scene
+    }
+
+    /// <summary>
+    /// Loads the main scene of the game.
+    /// </summary>
+    private void LoadMainScene()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Main_1");
     }
 }

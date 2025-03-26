@@ -196,7 +196,7 @@ public class BabyController : MonoBehaviour
 
     private bool DetectObstacles()
     {
-        float detectionRange = 2f;
+        float detectionRange = 3f;
         LayerMask obstacleLayer = LayerMask.GetMask("Walls");
 
         Vector2 moveDirection = transform.position;

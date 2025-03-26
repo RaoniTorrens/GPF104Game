@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class ExitController : MonoBehaviour
 {
@@ -11,5 +13,8 @@ public class ExitController : MonoBehaviour
         {
             GameManager.instance.Win();
         }
+        
     }
+
+    
 }

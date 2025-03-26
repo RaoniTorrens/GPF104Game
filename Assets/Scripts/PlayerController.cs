@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField]
-    protected float Speed = 5;
+    public float Speed = 5; // Changed to public
 
     // Private attributes
     private SpriteRenderer SpriteRenderer;
@@ -38,6 +38,7 @@ public class PlayerController : MonoBehaviour
 
     public void ChangeDirection(float horizontal) 
     {
+        Debug.Log($"horizontal {horizontal}");
         if (horizontal == 0)
             return;
 
@@ -46,6 +47,8 @@ public class PlayerController : MonoBehaviour
 
         FacingDirection = (int)horizontal;
 
-        gameObject.transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y);
+        /*gameObject.transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y);*/
+
+        SpriteRenderer.flipX = FacingDirection < 0;
     }
 }
