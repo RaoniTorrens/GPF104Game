@@ -28,6 +28,14 @@ public class GameManager : MonoBehaviour
         WinLoseTextElement.alpha = 0;
     }
 
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Quit();
+        }
+    }
+
     public void Rescue(GameObject goblin)
     {
         Debug.Log("RESCUE");
@@ -58,5 +66,14 @@ public class GameManager : MonoBehaviour
     private void LoadMainScene()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene("Main_1");
+    }
+
+    void Quit()
+    {
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 }
