@@ -6,7 +6,7 @@ using UnityEngine;
 public class BabyController : MonoBehaviour
 {
     // General Vars
-    
+
     // Editable on Editor
     [SerializeField]
     protected float Speed = 5;
@@ -20,20 +20,20 @@ public class BabyController : MonoBehaviour
     private int FacingDirection;
 
     [Header("Follow parameters")]
-    
+
     // Editable on Editor
     [SerializeField, Tooltip("How far can the player move without the baby following")]
     protected float RangeToFollow = 2;
     [SerializeField, Tooltip("Once the player leaves the baby following range, how long should the baby wait to follow")]
     protected float DelayToFollow = 1;
-    
+
     // Private
-    private GameObject PlayerObject;   
+    private GameObject PlayerObject;
     private CircleCollider2D RangeToFollowCollider;
     private float TimerToFollow;
 
     [Header("Roam parameters")]
-    
+
     // Editable on Editor
     [SerializeField, Tooltip("How far away from the player can the baby roam around")]
     protected float MaxDistanceToRoam = 1;
@@ -43,6 +43,14 @@ public class BabyController : MonoBehaviour
     // Private
     private Vector2 RoamTarget;
     private float TimerToRoam;
+
+    [Header("Obstacle Avoidance")]
+    [SerializeField]
+    private float obstacleDetectionRange = 1f;
+    [SerializeField]
+    private LayerMask obstacleLayer;
+    [SerializeField]
+    private float avoidanceForce = 2f;
 
     void Awake()
     {
@@ -79,7 +87,7 @@ public class BabyController : MonoBehaviour
 
         PlayerObject = collision.gameObject;
 
-        if (!Found) 
+        if (!Found)
         {
             Found = true;
             GameManager.instance.Rescue(gameObject);
@@ -115,7 +123,7 @@ public class BabyController : MonoBehaviour
     {
         if (TimerToFollow > 0)
             TimerToFollow -= Time.deltaTime;
-        
+
         Vector3 playerPosition = PlayerObject.transform.position;
 
         float deltaX = playerPosition.x - transform.position.x;
@@ -132,6 +140,10 @@ public class BabyController : MonoBehaviour
             velocity = new Vector2(horizontal, vertical).normalized;
         }
 
+        // Obstacle Avoidance
+        Vector2 avoidanceDirection = CalculateAvoidanceDirection(velocity);
+        velocity += avoidanceDirection * avoidanceForce;
+
         RigidBody.velocity = velocity * Speed;
     }
 
@@ -142,7 +154,7 @@ public class BabyController : MonoBehaviour
 
         if (MovementState != MovementStateEnum.ROAM && TimerToRoam <= 0)
             MovementState = MovementStateEnum.ROAM;
-        
+
         float distanceToTarget = Vector3.Distance(RoamTarget, transform.position);
 
         float deltaX = RoamTarget.x - transform.position.x;
@@ -151,11 +163,15 @@ public class BabyController : MonoBehaviour
         float horizontal = Mathf.Abs(deltaX) <= 0.1f ? 0 : deltaX / Mathf.Abs(deltaX);
         float vertical = Mathf.Abs(deltaY) <= 0.1f ? 0 : deltaY / Mathf.Abs(deltaY);
 
-        var velocity = new Vector2(horizontal, vertical).normalized * Speed;
+        var velocity = new Vector2(horizontal, vertical).normalized;
 
         LookAt(RoamTarget);
 
-        RigidBody.velocity = velocity;       
+        // Obstacle Avoidance
+        Vector2 avoidanceDirection = CalculateAvoidanceDirection(velocity);
+        velocity += avoidanceDirection * avoidanceForce;
+
+        RigidBody.velocity = velocity * Speed;
 
         if (distanceToTarget <= 0.2f)
         {
@@ -181,7 +197,7 @@ public class BabyController : MonoBehaviour
         ChangeDirection(horizontal);
     }
 
-    public void ChangeDirection(float horizontal) 
+    public void ChangeDirection(float horizontal)
     {
         if (horizontal == 0)
             return;
@@ -194,31 +210,50 @@ public class BabyController : MonoBehaviour
         gameObject.transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y);
     }
 
-    private bool DetectObstacles()
+    private Vector2 CalculateAvoidanceDirection(Vector2 currentVelocity)
     {
-        float detectionRange = 3f;
-        LayerMask obstacleLayer = LayerMask.GetMask("Walls");
+        Vector2 avoidanceDirection = Vector2.zero;
 
-        Vector2 moveDirection = transform.position;
-
-        if (MovementState == MovementStateEnum.FOLLOW)
-            moveDirection = PlayerObject.transform.position;
-        else if (MovementState == MovementStateEnum.ROAM)
-            moveDirection = RoamTarget;
-
-        moveDirection -= (Vector2)transform.position;
-
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, moveDirection, detectionRange, obstacleLayer);
-        
-        if (hit.collider != null) // If an obstacle is detected
+        // Check for obstacles in front of the baby
+        RaycastHit2D hitForward = Physics2D.Raycast(transform.position, currentVelocity.normalized, obstacleDetectionRange, obstacleLayer);
+        if (hitForward.collider != null)
         {
-            Debug.DrawRay(transform.position, moveDirection * detectionRange, Color.red);
-            return true;
+            Debug.DrawRay(transform.position, currentVelocity.normalized * obstacleDetectionRange, Color.red);
+            // Obstacle detected, calculate avoidance direction
+            Vector2 hitNormal = hitForward.normal;
+            avoidanceDirection += hitNormal;
         }
-        else 
+        else
         {
-            Debug.DrawRay(transform.position, moveDirection * detectionRange, Color.green);
-            return false;
+            Debug.DrawRay(transform.position, currentVelocity.normalized * obstacleDetectionRange, Color.green);
         }
+
+        // Check for obstacles to the left
+        Vector2 leftDirection = Quaternion.Euler(0, 0, 45) * currentVelocity.normalized;
+        RaycastHit2D hitLeft = Physics2D.Raycast(transform.position, leftDirection, obstacleDetectionRange, obstacleLayer);
+        if (hitLeft.collider != null)
+        {
+            Debug.DrawRay(transform.position, leftDirection * obstacleDetectionRange, Color.red);
+            avoidanceDirection += hitLeft.normal;
+        }
+        else
+        {
+            Debug.DrawRay(transform.position, leftDirection * obstacleDetectionRange, Color.green);
+        }
+
+        // Check for obstacles to the right
+        Vector2 rightDirection = Quaternion.Euler(0, 0, -45) * currentVelocity.normalized;
+        RaycastHit2D hitRight = Physics2D.Raycast(transform.position, rightDirection, obstacleDetectionRange, obstacleLayer);
+        if (hitRight.collider != null)
+        {
+            Debug.DrawRay(transform.position, rightDirection * obstacleDetectionRange, Color.red);
+            avoidanceDirection += hitRight.normal;
+        }
+        else
+        {
+            Debug.DrawRay(transform.position, rightDirection * obstacleDetectionRange, Color.green);
+        }
+
+        return avoidanceDirection.normalized;
     }
 }
